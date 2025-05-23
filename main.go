@@ -14,9 +14,9 @@ import (
 )
 
 var errLog = log.New(os.Stdout, "ERR: ", log.Ldate|log.Ltime|log.Lshortfile)
-var infoLog = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 var wg sync.WaitGroup
 var command = []string{"custom"}
+var rsgainSemaphore chan int
 
 func main() {
 	albumMode := flag.Bool("a", false, "Calculate album gain and peak.")
@@ -25,6 +25,7 @@ func main() {
 	targetLoudness := flag.Int("l", -18, "Use n LUFS as target loudness (-30 ≤ n ≤ -5), default: -18")
 	clipMode := flag.String("c", "n", "n: no clipping protection (default),\np: clipping protection enabled for positive gain values only,\na: Use max peak level n dB for clipping protection")
 	quiet := flag.Bool("q", false, "(rsgain) Don't print scanning status messages.")
+	rsgainLimit := flag.Int("r", 100, "Limit, how many rsgain instances can run at a time. 0 for unlimited.")
 	flag.Parse()
 
 	libraryRoot := flag.Arg(0)
@@ -66,8 +67,14 @@ func main() {
 		command = append(command, "-q")
 	}
 
-	// scan for album folders
+	rsgainSemaphore = make(chan int, *rsgainLimit)
 
+	/* Used for debugging
+	ctx, cancel := context.WithCancel(context.Background())
+	go monitorRsgainProcesses(ctx, 500*time.Millisecond)
+	*/
+
+	// scan for album folders
 	wg.Add(1)
 	err := walker(libraryRoot)
 
@@ -76,6 +83,8 @@ func main() {
 	}
 
 	wg.Wait()
+
+	/*cancel()*/
 }
 
 func walker(root string) error {
@@ -116,6 +125,11 @@ func walker(root string) error {
 				}
 
 				if len(audioFiles) > 0 {
+					if cap(rsgainSemaphore) > 0 {
+						rsgainSemaphore <- 0 //add a slot to the semaphore
+						defer func() { <-rsgainSemaphore }()
+					}
+
 					cmd := exec.Command("rsgain", append(command, audioFiles...)...)
 					err := cmd.Run()
 
@@ -149,3 +163,33 @@ func isSupportedMusicFile(path string) bool {
 
 	return false
 }
+
+/*
+func monitorRsgainProcesses(ctx context.Context, interval time.Duration) {
+	var peak int
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			cmd := exec.Command("pgrep", "rsgain")
+			out, err := cmd.Output()
+			if err != nil && len(out) == 0 {
+				continue // rsgain not found, 0 instances
+			}
+
+			count := bytes.Count(out, []byte("\n"))
+			if count > peak {
+				peak = count
+			}
+			log.Printf("Current rsgain instances: %d, Peak: %d\n", count, peak)
+
+		case <-ctx.Done():
+			log.Printf("Monitoring stopped. Peak rsgain processes: %d\n", peak)
+			return
+		}
+	}
+}
+*/
