@@ -14,6 +14,15 @@ the rsgain custom command, then that is summoned concurrently (GOROUTINES!!! <3,
 :)
 `autogain -h`
 
+## Expected library format
+
+There isn't really any requirement for track based REPLAYGAIN. The script will find it in the folder you pass to it.
+As for album based REPLAYGAIN: the script considers audio files, that are in the same directory to belong into the same album.
+So, rsgain will calculate REPLAYGAIN_ALBUM_GAIN for those, as if they are in one album.
+
+This isn't an issue at all, if you have your albums grouped into fodlers,
+you don't make rsgain calculate album REPLAYGAIN or just don't use that. 
+
 ## Dependencies
 
-- rsgain - have it installed and in your path
+- rsgain - have it installed and in your PATH
