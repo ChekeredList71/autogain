@@ -25,7 +25,7 @@ func main() {
 	targetLoudness := flag.Int("l", -18, "Use n LUFS as target loudness (-30 ≤ n ≤ -5), default: -18")
 	clipMode := flag.String("c", "n", "n: no clipping protection (default),\np: clipping protection enabled for positive gain values only,\na: Use max peak level n dB for clipping protection")
 	quiet := flag.Bool("q", false, "(rsgain) Don't print scanning status messages.")
-	rsgainLimit := flag.Int("r", 100, "Limit, how many rsgain instances can run at a time. 0 for unlimited.")
+	rsgainLimit := flag.Int("r", 100, "Limit, how many rsgain instances can run at a time.")
 	flag.Parse()
 
 	libraryRoot := flag.Arg(0)
@@ -125,10 +125,8 @@ func walker(root string) error {
 				}
 
 				if len(audioFiles) > 0 {
-					if cap(rsgainSemaphore) > 0 {
-						rsgainSemaphore <- 0 //add a slot to the semaphore
-						defer func() { <-rsgainSemaphore }()
-					}
+					rsgainSemaphore <- 0 //add a slot to the semaphore
+					defer func() { <-rsgainSemaphore }()
 
 					cmd := exec.Command("rsgain", append(command, audioFiles...)...)
 					err := cmd.Run()
