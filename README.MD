@@ -16,7 +16,8 @@ the rsgain custom command, then that is summoned concurrently (GOROUTINES!!! <3,
 
 ## Expected library format
 
-There isn't really any requirement for track based REPLAYGAIN. The script will find it in the folder you pass to it.
+There isn't really any requirement for track based REPLAYGAIN. The script will find your files in the folder you pass to it.
+
 As for album based REPLAYGAIN: the script considers audio files, that are in the same directory to belong into the same album.
 So, rsgain will calculate REPLAYGAIN_ALBUM_GAIN for those, as if they are in one album.
 
