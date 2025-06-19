@@ -41,7 +41,7 @@ func main() {
 	}
 
 	if !slices.Contains([]string{"s", "d", "i"}, *tagMode) {
-		fmt.Printf("Invalid clip mode: %s", *tagMode)
+		fmt.Printf("Invalid tagmode: %s", *tagMode)
 		os.Exit(2)
 	}
 	command = append(command, "-s", *tagMode)
