@@ -129,6 +129,10 @@ func walker(root string) error {
 					defer func() { <-rsgainSemaphore }()
 
 					cmd := exec.Command("rsgain", append(command, audioFiles...)...)
+
+					// Stream output to console
+					cmd.Stdout = os.Stdout
+					cmd.Stderr = os.Stderr
 					err := cmd.Run()
 
 					if err != nil {
