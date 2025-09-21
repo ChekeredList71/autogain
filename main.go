@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -161,6 +162,11 @@ func runRSGain(audioFiles []string, isQuiet bool) error {
 	err := cmd.Run()
 
 	if err != nil {
+		if errors.Is(err, exec.ErrNotFound) {
+			fmt.Println("autogain can't find rsgain")
+			fmt.Println("rsgain is not installed and/or not in PATH! Please install it and make it runnable from CLI.")
+			os.Exit(127)
+		}
 		errLog.Printf("Error calling rsgain on these files: '%v'\n", audioFiles)
 		errLog.Printf("Command failed: %s\nError: %v\n", cmd.String(), err)
 
