@@ -21,7 +21,7 @@ There isn't really any requirement for track based REPLAYGAIN. The script will f
 As for album based REPLAYGAIN: the script considers audio files, that are in the same directory to belong into the same album.
 So, rsgain will calculate REPLAYGAIN_ALBUM_GAIN for those, as if they are in one album.
 
-This isn't an issue at all, if you have your albums grouped into fodlers,
+This isn't an issue at all, if you have your albums grouped into folders,
 you don't make rsgain calculate album REPLAYGAIN or just don't use that. 
 
 ## Dependencies
