@@ -20,55 +20,55 @@ var command = []string{"custom"}
 var rsgainSemaphore chan int
 
 func main() {
-	albumMode := *flag.Bool("a", false, "Calculate album gain and peak.")
-	skipExisting := *flag.Bool("S", false, "Don't scan files with existing ReplayGain information.")
-	tagMode := *flag.String("s", "s", "Tagmode:\ns: scan only\ni: write tags\nd: delete tags")
-	targetLoudness := *flag.Int("l", -18, "Use n LUFS as target loudness (-30 ≤ n ≤ -5), default: -18")
-	clipMode := *flag.String("c", "n", "n: no clipping protection (default),\np: clipping protection enabled for positive gain values only,\na: Use max peak level n dB for clipping protection")
-	quiet := *flag.Bool("q", false, "(rsgain) Don't print scanning status messages.")
-	rsgainLimit := *flag.Int("r", 100, "Limit, how many rsgain instances can run at a time.")
+	albumMode := flag.Bool("a", false, "Calculate album gain and peak.")
+	skipExisting := flag.Bool("S", false, "Don't scan files with existing ReplayGain information.")
+	tagMode := flag.String("s", "s", "Tagmode:\ns: scan only\ni: write tags\nd: delete tags")
+	targetLoudness := flag.Int("l", -18, "Use n LUFS as target loudness (-30 ≤ n ≤ -5), default: -18")
+	clipMode := flag.String("c", "n", "n: no clipping protection (default),\np: clipping protection enabled for positive gain values only,\na: Use max peak level n dB for clipping protection")
+	quiet := flag.Bool("q", false, "(rsgain) Don't print scanning status messages.")
+	rsgainLimit := flag.Int("r", 100, "Limit, how many rsgain instances can run at a time.")
 	flag.Parse()
 
 	libraryRoot := flag.Arg(0)
 
 	// build the rsgain custom command and check values
 
-	if albumMode {
+	if *albumMode {
 		command = append(command, "-a")
 	}
 
-	if skipExisting {
+	if *skipExisting {
 		command = append(command, "-S")
 	}
 
-	if !slices.Contains([]string{"s", "d", "i"}, tagMode) {
-		fmt.Printf("Invalid tagmode: %s", tagMode)
+	if !slices.Contains([]string{"s", "d", "i"}, *tagMode) {
+		fmt.Printf("Invalid tagmode: %s", *tagMode)
 		os.Exit(2)
 	}
-	command = append(command, "-s", tagMode)
+	command = append(command, "-s", *tagMode)
 
-	if !(-30 <= targetLoudness && targetLoudness <= -5) {
+	if !(-30 <= *targetLoudness && *targetLoudness <= -5) {
 		fmt.Println("Target loudness n needs to be -30 ≤ n ≤ -5")
 		os.Exit(2)
 	}
-	command = append(command, "-l", strconv.Itoa(targetLoudness))
+	command = append(command, "-l", strconv.Itoa(*targetLoudness))
 
-	if !slices.Contains([]string{"n", "p", "a"}, clipMode) {
-		fmt.Printf("Invalid clip mode: %s", clipMode)
+	if !slices.Contains([]string{"n", "p", "a"}, *clipMode) {
+		fmt.Printf("Invalid clip mode: %s", *clipMode)
 		os.Exit(2)
 	}
-	command = append(command, "-c", clipMode)
+	command = append(command, "-c", *clipMode)
 
 	if libraryRoot == "" {
 		fmt.Println("No library path specified.")
 		os.Exit(2)
 	}
 
-	if quiet {
+	if *quiet {
 		command = append(command, "-q")
 	}
 
-	rsgainSemaphore = make(chan int, rsgainLimit)
+	rsgainSemaphore = make(chan int, *rsgainLimit)
 
 	/* Used for debugging
 	ctx, cancel := context.WithCancel(context.Background())
@@ -77,13 +77,13 @@ func main() {
 
 	// if root is just a file
 	if isSupportedMusicFile(libraryRoot) {
-		err := runRSGain([]string{libraryRoot}, quiet)
+		err := runRSGain([]string{libraryRoot}, *quiet)
 		if err != nil {
 			errLog.Printf("Something went wrong scanning %s: '%s\n'", libraryRoot, err)
 		}
 	} else { // if we have a folder, scan them with WalkDir
 		wg.Add(1)
-		err := walker(libraryRoot, quiet)
+		err := walker(libraryRoot, *quiet)
 
 		if err != nil {
 			errLog.Printf("Error walking library folder: %s\n", err)
