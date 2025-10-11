@@ -77,10 +77,7 @@ func main() {
 
 	// if root is just a file
 	if isSupportedMusicFile(libraryRoot) {
-		err := runRSGain([]string{libraryRoot}, *quiet)
-		if err != nil {
-			errLog.Printf("Something went wrong scanning %s: '%s\n'", libraryRoot, err)
-		}
+		runRSGain([]string{libraryRoot}, *quiet)
 	} else { // if we have a folder, scan them with WalkDir
 		wg.Add(1)
 		err := walker(libraryRoot, *quiet)
@@ -141,7 +138,7 @@ func walker(root string, isQuiet bool) error {
 					rsgainSemaphore <- 0 //add a slot to the semaphore
 					defer func() { <-rsgainSemaphore }()
 
-					err = runRSGain(audioFiles, isQuiet)
+					runRSGain(audioFiles, isQuiet)
 				}
 			}()
 		}
@@ -150,7 +147,7 @@ func walker(root string, isQuiet bool) error {
 	})
 }
 
-func runRSGain(audioFiles []string, isQuiet bool) error {
+func runRSGain(audioFiles []string, isQuiet bool) {
 	cmd := exec.Command("rsgain", append(command, audioFiles...)...)
 
 	// Stream output to console if set
@@ -171,8 +168,6 @@ func runRSGain(audioFiles []string, isQuiet bool) error {
 		errLog.Printf("Command failed: %s\nError: %v\n", cmd.String(), err)
 
 	}
-
-	return err
 }
 
 func isSupportedMusicFile(path string) bool {
